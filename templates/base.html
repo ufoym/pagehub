@@ -1,24 +1,61 @@
-<!doctype html>
-<head>
-  <meta charset="utf-8">
-  <title>{% block page_title %}Your Site{% endblock %}</title>
-  {% block css %}{% endblock %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-</head>
-<body class="box">
+    <title>{% block page_title %}Your Site{% endblock %}</title>
 
-<nav class="nav-menu">
-    <ul>
-        <li><a href="{{ url_for('home') }}">Home</a></li>
-    </ul>
-</nav>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
+    {% block css %}{% endblock %}
+  </head>
+  <body>
 
-<div class="{% block content_class %}container{% endblock content_class %}">
+    <!-- navbar
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="{{ url_for('home') }}">Project name</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li class="divider"></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
-  <div class="content" role="main">
-    {% block content %}{% endblock %}
-  </div>
+    <!-- content
+    ================================================== -->
+    <div class="container">
 
-</div><!-- end container -->
-</body>
+      {% block content %}{% endblock %}
+
+      <hr>
+      <footer>
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>&copy; Company 2013</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+  </body>
 </html>
