@@ -36,7 +36,8 @@ def page(path):
         org_fn = os.path.join(org_dir, img_fn)
         new_fn = os.path.join(img_dir,
             '%s_%s' % (page.path.replace('/', '_'), img_fn))
-        shutil.copy(org_fn, new_fn)
+        if os.path.exists(org_fn) and not os.path.exists(new_fn):
+            shutil.copy(org_fn, new_fn)
     # update html
     img_rep = r'\1"/static/img/%s_\2"' % page.path.replace('/', '_')
     page.html = img_reg.sub(img_rep, page.html)
