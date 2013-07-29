@@ -11,6 +11,9 @@ app = Flask(__name__)
 app.config.from_pyfile('settings.py')
 pages = FlatPages(app)
 freezer = Freezer(app)
+app_dir = os.path.dirname(os.path.abspath(__file__))
+page_dir= os.path.join(app_dir, pages.config('root'))
+img_dir = os.path.join(app_dir, 'static', 'img')
 
 # -----------------------------------------------------------------------------
 
@@ -24,26 +27,28 @@ def home():
 @app.route('/<path:path>/')
 def page(path):
     page = pages.get_or_404(path)
-
     # process images in subfolder
-    root = os.path.dirname(os.path.abspath(__file__))
     img_reg = re.compile(r'(<img .*?src=)"(.*?)"', re.I)
-    img_rep = r'\1"/static/img/%s_\2"' % page.path.replace('/', '_')
     # copy images
-    new_dir = os.path.join(root, 'static', 'img')
-    org_dir = os.path.join(root, 'pages', *page.path.split('/')[:-1])
+    org_dir = os.path.join(page_dir, *page.path.split('/')[:-1])
     for img in img_reg.finditer(page.html):
         img_fn = img.group(2)
         org_fn = os.path.join(org_dir, img_fn)
-        new_fn = os.path.join(new_dir,
+        new_fn = os.path.join(img_dir,
             '%s_%s' % (page.path.replace('/', '_'), img_fn))
-        shutil.copy2(org_fn, new_fn)
+        shutil.copy(org_fn, new_fn)
+    # update html
+    img_rep = r'\1"/static/img/%s_\2"' % page.path.replace('/', '_')
     page.html = img_reg.sub(img_rep, page.html)
     return render_template('page.html', page=page)
 
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    using_dirs = [page_dir, img_dir]
+    for using_dir in using_dirs:
+        if not os.path.exists(using_dir):
+            os.makedirs(using_dir)
     app.run()
 
 # -----------------------------------------------------------------------------
