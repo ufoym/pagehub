@@ -38,9 +38,10 @@ def page(path):
             '%s_%s' % (page.path.replace('/', '_'), img_fn))
         if os.path.exists(org_fn) and not os.path.exists(new_fn):
             shutil.copy(org_fn, new_fn)
-    # update html
-    img_rep = r'\1"/static/img/%s_\2"' % page.path.replace('/', '_')
-    page.html = img_reg.sub(img_rep, page.html)
+            # update html
+            img_rep = r'/static/img/%s_%s"' \
+                    % (page.path.replace('/', '_'), img_fn)
+            page.html = page.html.replace(img_fn, img_rep)
     nav = make_nav()
     return render_template('page.html', page=page, nav=nav)
 
