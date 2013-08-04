@@ -22,8 +22,8 @@ def home():
     posts = [page for page in pages if 'date' in page.meta]
     sorted_posts = sorted(posts, reverse=True,
         key=lambda page: page.meta['date'])
-    make_nav()
-    return render_template('index.html', pages=sorted_posts)
+    nav = make_nav()
+    return render_template('index.html', pages=sorted_posts, nav=nav)
 
 @app.route('/<path:path>/')
 def page(path):
@@ -41,21 +41,23 @@ def page(path):
     # update html
     img_rep = r'\1"/static/img/%s_\2"' % page.path.replace('/', '_')
     page.html = img_reg.sub(img_rep, page.html)
-    return render_template('page.html', page=page)
+    nav = make_nav()
+    return render_template('page.html', page=page, nav=nav)
 
 # -----------------------------------------------------------------------------
 
-def make_nav(fn = os.path.join(page_dir, 'nav.txt')):
-    # structure:
-    #    [[level0_name, level0_url, level1_name, level1_url, ...], [...], ...]
+def make_nav(fn = os.path.join(page_dir, 'cn.nav')):
     def add_term(container, term):
-        try:
-            name, url = term.split('#')
-        except ValueError:
+        term = term.strip()
+        if not term:
             return
-        name, url = name.strip(), url.strip()
-        if url and not name:
-            name = pages.get(url).meta['title']
+        term = unicode(term, 'utf-8')
+        if term.startswith('/'):
+            url = term
+            name = pages.get(url[1:]).meta['title']
+        else:
+            url = '#'
+            name = term
         container.append(name)
         container.append(url)
     with open(fn, 'r') as f:
@@ -63,12 +65,14 @@ def make_nav(fn = os.path.join(page_dir, 'nav.txt')):
         for line in f.readlines():
             single_level = []
             raw_terms = line.split(':')
-            level0, level1 = raw_terms[0], raw_terms[1]
-            add_term(single_level, level0)
-            for level1_term in level1.split(','):
-                add_term(single_level, level1_term)
+            add_term(single_level, raw_terms[0])
+            if len(raw_terms) > 1:
+                for level1_term in raw_terms[1].split(','):
+                    add_term(single_level, level1_term)
             all_levels.append(single_level)
-    print all_levels
+    # structure:
+    #    [[level0_name, level0_url, level1_name, level1_url, ...], [...], ...]
+    return all_levels
 
 
 # -----------------------------------------------------------------------------
