@@ -4,6 +4,8 @@ import codecs
 import locale
 import itertools
 import jinja2
+import re
+import shutil
 
 # -----------------------------------------------------------------------------
 
@@ -85,8 +87,46 @@ def make_page_utf8(target_ext = '.txt'):
 
 # -----------------------------------------------------------------------------
 
+def make_image( target_ext = '.md',
+                image_dir  = os.path.join(app_dir, 'static', 'img', 'content'),
+                image_root = '/static/img/content/'):
+    def _process(fn, prefix):
+        img_regex = re.compile(r'(!.*?\[.*?\].*?)\((.*?)\)', re.I)
+        with codecs.open(fn, 'r+', encoding = default_charset) as f:
+            content = f.read()
+            parent_path = os.path.dirname(fn)
+            for img in img_regex.finditer(content):
+                src_name = img.group(2)
+                dst_name = '_'.join([prefix, src_name])
+                # copy image
+                src_path = os.path.join(parent_path, src_name)
+                dst_path = os.path.join(image_dir, dst_name)
+                if os.path.exists(src_path):
+                    shutil.copy(src_path, dst_path)
+            # replace link
+            dst_link = r'\1(%s%s_\2)' % (image_root, prefix)
+            f.seek(0)
+            f.write(img_regex.sub(dst_link, content))
+            f.truncate()
+    def _walk(directory, path_prefix=()):
+        for name in os.listdir(directory):
+            full_name = os.path.join(directory, name)
+            if os.path.isdir(full_name):
+                _walk(full_name, path_prefix + (name,))
+            elif name.endswith(target_ext):
+                prefix = '_'.join(path_prefix)
+                _process(full_name, prefix)
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+    _walk(page_dir)
+
+# -----------------------------------------------------------------------------
+
 if __name__ == "__main__":
+    if not os.path.exists(page_dir):
+        os.makedirs(page_dir)
     make_page_utf8()
     make_nav_page()
+    make_image()
 
 # -----------------------------------------------------------------------------
