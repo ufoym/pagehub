@@ -3,6 +3,7 @@
 from flask import Flask, render_template
 from flask_flatpages import FlatPages
 from flask_frozen import Freezer
+from prepare import prepare
 
 # -----------------------------------------------------------------------------
 
@@ -28,6 +29,7 @@ def page(path):
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    prepare()
     app.run()
 
 # -----------------------------------------------------------------------------

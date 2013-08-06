@@ -12,6 +12,8 @@ import shutil
 app_dir         = os.path.dirname(os.path.abspath(__file__))
 page_dir        = os.path.join(app_dir, 'pages')
 template_dir    = os.path.join(app_dir, 'templates')
+image_dir       = os.path.join(app_dir, 'static', 'img', 'content')
+image_root      = '/static/img/content/'
 default_charset = 'utf-8'
 
 # -----------------------------------------------------------------------------
@@ -87,9 +89,7 @@ def make_page_utf8(target_ext = '.txt'):
 
 # -----------------------------------------------------------------------------
 
-def make_image( target_ext = '.md',
-                image_dir  = os.path.join(app_dir, 'static', 'img', 'content'),
-                image_root = '/static/img/content/'):
+def make_image(target_ext = '.md'):
     def _process(fn, prefix):
         img_regex = re.compile(r'(!.*?\[.*?\].*?)\((.*?)\)', re.I)
         with codecs.open(fn, 'r+', encoding = default_charset) as f:
@@ -116,17 +116,21 @@ def make_image( target_ext = '.md',
             elif name.endswith(target_ext):
                 prefix = '_'.join(path_prefix)
                 _process(full_name, prefix)
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
     _walk(page_dir)
 
 # -----------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    if not os.path.exists(page_dir):
-        os.makedirs(page_dir)
+def prepare():
+    for checking_dir in [image_dir, page_dir]:
+        if not os.path.exists(checking_dir):
+            os.makedirs(checking_dir)
     make_page_utf8()
     make_nav_page()
     make_image()
+
+# -----------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    prepare()
 
 # -----------------------------------------------------------------------------
