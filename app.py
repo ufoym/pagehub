@@ -22,8 +22,7 @@ def home():
     posts = [page for page in pages if 'date' in page.meta]
     sorted_posts = sorted(posts, reverse=True,
         key=lambda page: page.meta['date'])
-    nav = make_nav()
-    return render_template('index.html', pages=sorted_posts, nav=nav)
+    return render_template('index.html', pages=sorted_posts)
 
 @app.route('/<path:path>/')
 def page(path):
@@ -42,39 +41,7 @@ def page(path):
             img_rep = r'/static/img/%s_%s"' \
                     % (page.path.replace('/', '_'), img_fn)
             page.html = page.html.replace(img_fn, img_rep)
-    nav = make_nav()
-    return render_template('page.html', page=page, nav=nav)
-
-# -----------------------------------------------------------------------------
-
-def make_nav(fn = os.path.join(page_dir, 'cn.nav')):
-    def add_term(container, term):
-        term = term.strip()
-        if not term:
-            return
-        term = unicode(term, 'utf-8')
-        if term.startswith('/'):
-            url = term
-            name = pages.get(url[1:]).meta['title']
-        else:
-            url = '#'
-            name = term
-        container.append(name)
-        container.append(url)
-    with open(fn, 'r') as f:
-        all_levels = []
-        for line in f.readlines():
-            single_level = []
-            raw_terms = line.split(':')
-            add_term(single_level, raw_terms[0])
-            if len(raw_terms) > 1:
-                for level1_term in raw_terms[1].split(','):
-                    add_term(single_level, level1_term)
-            all_levels.append(single_level)
-    # structure:
-    #    [[level0_name, level0_url, level1_name, level1_url, ...], [...], ...]
-    return all_levels
-
+    return render_template('page.html', page=page)
 
 # -----------------------------------------------------------------------------
 
