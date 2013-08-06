@@ -3,27 +3,27 @@ import yaml
 import codecs
 import locale
 import itertools
-from jinja2 import Template
-
-app_dir = os.path.dirname(os.path.abspath(__file__))
-page_dir= os.path.join(app_dir, 'pages')
-template_dir = os.path.join(app_dir, 'templates')
-code = locale.getpreferredencoding()
-extension = '.txt'
+import jinja2
 
 # -----------------------------------------------------------------------------
 
-def make_nav(fn):
+app_dir         = os.path.dirname(os.path.abspath(__file__))
+page_dir        = os.path.join(app_dir, 'pages')
+template_dir    = os.path.join(app_dir, 'templates')
+default_charset = 'utf-8'
+
+# -----------------------------------------------------------------------------
+
+def make_nav(fn, extension = '.md'):
     def add_term(container, term):
         term = term.strip()
         if not term:
             return
-        term = term.decode(code)
         if term.startswith('/'):
             url = term
             path = ''.join([os.path.join(page_dir, url[1:]), extension])
             name = 'No Name'
-            with codecs.open(path, 'r', encoding = code) as f:
+            with codecs.open(path, 'r', encoding = default_charset) as f:
                 lines = iter(f.read().split(u'\n'))
                 # Read lines until an empty line is encountered.
                 meta = u'\n'.join(itertools.takewhile(unicode.strip, lines))
@@ -33,7 +33,7 @@ def make_nav(fn):
             name = term
         container.append(name)
         container.append(url)
-    with open(fn, 'r') as f:
+    with codecs.open(fn, 'r', encoding = default_charset) as f:
         all_levels = []
         for line in f.readlines():
             single_level = []
@@ -47,20 +47,46 @@ def make_nav(fn):
     #    [[level0_name, level0_url, level1_name, level1_url, ...], [...], ...]
     return all_levels
 
-def make_nav_page(data_fn = os.path.join(page_dir, 'navigation'),
+def make_nav_page(data_fn = os.path.join(page_dir, 'navigation.md'),
     src_fn = os.path.join(template_dir, 'navigation.html'),
     dst_fn = os.path.join(template_dir, 'rendered_navigation.html')):
-    with open(src_fn, 'r') as f:
-        template = Template(f.read())
-    os.rename(data_fn + extension, data_fn)
+    with codecs.open(src_fn, 'r', encoding = default_charset) as f:
+        template = jinja2.Template(f.read())
     rendered_navigation = template.render(nav = make_nav(data_fn))
-    os.rename(data_fn, data_fn + extension)
-    with open(dst_fn, 'w') as f:
-        f.write(rendered_navigation.encode('utf-8'))
+    with codecs.open(dst_fn, 'w', encoding = default_charset) as f:
+        f.write(rendered_navigation)
+    os.remove(data_fn)
+
+# -----------------------------------------------------------------------------
+
+def convert_charset(src_fn, dst_fn,
+    src_formats = [locale.getpreferredencoding(), 'ascii'],
+    dst_format = default_charset):
+    for src_format in src_formats:
+        try:
+            with codecs.open(src_fn, 'r', src_format) as src_f:
+                with codecs.open(dst_fn, 'w', dst_format) as dst_f:
+                    for line in src_f:
+                        dst_f.write(line)
+                    return True
+        except UnicodeDecodeError:
+            pass
+    return False
+
+def make_page_utf8(target_ext = '.txt'):
+    def _walk(directory):
+        for name in os.listdir(directory):
+            full_name = os.path.join(directory, name)
+            if os.path.isdir(full_name):
+                _walk(full_name)
+            elif name.endswith(target_ext):
+                convert_charset(full_name, full_name[:-len(target_ext)]+'.md')
+    _walk(page_dir)
 
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    make_page_utf8()
     make_nav_page()
 
 # -----------------------------------------------------------------------------

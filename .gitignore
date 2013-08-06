@@ -2,3 +2,5 @@
 scripts
 build
 pages
+static/img/*.png
+templates/rendered_*.html
